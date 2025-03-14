@@ -1,0 +1,5 @@
+/.quarto/
+_manuscript
+index.tex
+index.log
+site_libs/
