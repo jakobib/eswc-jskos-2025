@@ -11,7 +11,11 @@ author:
     orcid: 0000-0002-7613-4123
     email: jakob.voss@gbv.de
 abstract: |
-  This is going to become an abstract.
+  JSKOS is a JSON format based on SKOS and other standards and features commonly found in 
+  knowledge organization systems. In particular it supports mappings objects, and qualified
+  statements similar to Wikibase.
+  The format is used both as RDF representation with JSON-LD and as knowledge representation
+  format in its own right, especially for terminology based data integration in NFDI.
 keywords:
  - knowledge graphs
  - data integration
@@ -22,129 +26,115 @@ bibliography: references.bib
 
 # Introduction
 
-The JSKOS format (JSON for Knowledge Organization Systems) was created 2014 in preparation of project coli-conc [@Diedrichs2015] to provide a JSON format for knowledge organization systems (KOS) and semantic artifacts, such as classifications, thesauri, authority files, and knowledge graphs. The data model is based on SKOS [@Miles2009] extended by entities for mappings and elements from other ontologies. JSKOS has since become a core part of terminology infrastructure at VZG library service center and it is being applied in the National Research Data Infrastructure of Germany (NFDI), in particular the [knowledge graph of NFDI4Objects](https://graph.nfdi4objects.net/) and the NFDI Terminology Services (TS4NFDI) [@Baum2024].
+The JSKOS format (JSON for Knowledge Organization Systems) was created to provide a JSON format for knowledge organization systems (KOS) and semantic artifacts, such as classifications, thesauri, authority files, and knowledge graphs. The data model is based on the Simple Knowledge Organization System (SKOS) extended by entities for mappings and elements from other ontologies. JSKOS has since become a core part of the terminology infrastructure at VZG library service center and is being applied in the National Research Data Infrastructure of Germany (NFDI), in particular the knowledge graph of NFDI4Objects and the NFDI Terminology Services (TS4NFDI) [@Baum2024].
 
 # History and applications
 
-Project coli-conc started in 2014 to build an infrastructure for computer-assisted creation and management of mappings (also known as crosswalks) between KOS [@Diedrichs2015]. This required a JSON format for KOS and its elements (concepts, classes, entities...) and for individual mappings. The Simple Knowledge Organization System (SKOS) [@Miles2009] was used as core ontology, mapped to JSON, and extended with missing properties and classes. Another important input was the data model of the terminology registry BARTOC [@Ledl2016; @Voss2016] and the Networked Knowledge Organization Systems Dublin Core Application Profile (NKOS AP) [@Zeng2015]. To simplify its use in web applications, the resulting JSKOS format was not defined as RDF ontology but as JSON format with mapping to RDF based on JSON-LD.
+Project coli-conc was initiated in 2014 to build an infrastructure for computer-assisted creation and management of mappings (also known as crosswalks or alignments) between KOS [@Diedrichs2015]. This required a JSON format for KOS elements and individual mappings. The format was designed based on SKOS and a review of existing software, APIs, and formats for knowledge organization systems @Voss2025. Another early influence was the data model of the terminology registry BARTOC [@Ledl2016; @Voss2016] and the Networked Knowledge Organization Systems Dublin Core Application Profile (NKOS AP) [@Zeng2015]. To simplify its use in web applications, the result is not defined as RDF ontology but as JSON format with optional JSON-LD mapping to RDF.
 
-Specification and features of JSKOS have since been extended based on requests from practice. The main applications and libraries using JSKOS are
+Specification of JSKOS have since been extended based on feature requests from practice. Applications and libraries using JSKOS include:
 
 - [Cocoda](https://coli-conc.gbv.de/cocoda/), a web application to view, create, evaluate, and modify mappings
-- [BARTOC](https://bartoc.org), a registry of KOS (migrated from University Library Basel to VZG in 2020)
-- [JSKOS Server](https://github.com/gbv/jskos-server), a database management system to store (read and write) JSKOS data with authentification
-- [cocoda-sdk](https://github.com/gbv/cocoda-sdk), a programming library to access KOS from diverse sources and formats and map them to JSKOS
+- [BARTOC](https://bartoc.org), a registry of KOS (migrated from UB Basel to VZG in 2020)
+- [JSKOS Server](https://github.com/gbv/jskos-server), a database management system for JSKOS data
+- [cocoda-sdk](https://github.com/gbv/cocoda-sdk), a programming library to map diverse sources to JSKOS
+- [wikidata-jskos](https://github.com/gbv/wikidata-jskos/), a partial mapping between Wikidata and JSKOS
 
-This infrastructure is currently being extended to support mapping more KOS formats from and to JSKOS for integration of terminology registries in NFDI.
+This infrastructure is being extended to support mapping more KOS formats from and to JSKOS to enable integration of terminology registries in NFDI. The current specification is published at <https://gbv.github.io/jskos/>. A release version 1.0.0 is planned until 2026 as part of TS4NFDI integration phase.
 
 # Features
 
-Repeatable fields are always arrays and language-tagged strings are objects with language tags as keys. 
+Several knowledge graph meta-models exist (RDF-star, labeled property graphs, Wikibase...) with RDF being the most popular. JSKOS defines both its own model and a mapping to RDF. The model defines the following 10 object types:
 
-- SKOS Concept and Concept Scheme with their common properties from SKOS specification
-- Arbitrary resources
-- KOS features beyond SKOS, in particular mappings, and concept bundles (for combination of concepts, also for facetted classifications)
-- Addition fields commonly found in KOS
-- Special fields for management of resources (created vs startDate)
-- Ranks and qualified statements similar to Wikibase data model
+- **resources** for all types of entities
+    - **items** for named entities, in particular,
+        - **concepts** for entities from a knowledge organization system
+        - **concept schemes** for compiled collections of concepts (KOS) 
+        - **mappings** for mappings between the concepts of concept schemes
+        - **concordances** for curated collections of mappings
+        - **registries** for collections of items (concepts, concept schemes...)
+        - **distributions** for available forms to access the content of an item
+    - **occurrences** for instances and numbers of concept usages
+- **annotations** for reviewing and commenting on individual resources
 
-The JSON structure described by the specification and can be checked by a JSON Schema [@] and a reference implementation [jskos-validate].
+Each object type has a set of fields (properties), including `type` for subtypes. Custom properties are supported with qualified statements, similar to referenced statements with ranks in Wikibase. Some fields allow explicit distinction between open world for incomplete data and closed world. Despite this flexibility, the strength of JSKOS lies in its limitation to properties most commonly found in KOS. This includes JSKOS concept fields for:
 
-A principal guideline in creation of JSKOS was to always look out for existing solutions. Instead of defining data elements for all types of content, some aspects are delegated to existing standards (@tab-standards). This is similar to RDF ontologies that often incorporate classes and properties from other ontologies, but JSKOS was not restricted to choose from RDF ontologies.
+- places and dates (`startPlace`, `endPlace`, `startDate`...)
+- connections (`partOf`, `replacedBy`, `basedOn`, `previous`, `next`..)
+- media files and addresses (`media`, `address`)
+- metadata (`created`, `issued`, `contributor`...)
+
+Other object type have fields such as `uriSpace` of a concept scheme and `accessURL` of a distribution. A major contribution of JSKOS is the introduction of mapping objects and their grouping in concordances. Another new feature is support of compound concepts: -- for instance the *wreck of Titantic* in one knowledge graph could be equal to the combination of two resources *Titanic* and *shipwreck* in another knowledge base. @lst-example shows a JSKOS concept with some of these features.
+
+The JSKOS data format defined by its specification can be validated using a JSON Schema and a reference implementation. The data structure is designed to be easily processible in scripting languages: for instance repeatable fields are always arrays. A principal guideline in the creation of JSKOS was to always look for existing solutions. Instead of defining data elements for all content types, some aspects are delegated to existing standards (@tbl-standards). This is similar to RDF ontologies that often incorporate classes and properties from other ontologies, but JSKOS was not restricted to selecting from RDF ontologies only. 
 
 | Content | Standard
-|---------|----------
-| Annotations (z.B. for reviewing concepts) | Web Annotation Data Model
-| Media files (audiovisual content) | IIIF
-| Geographical data | GeoJSON
-| Temporal data | XML Schema and ISO 8601-2 (EDTF)
+|:--------|:---------
+| Annotations (for reviewing) | [Web Annotation Data Model](https://www.w3.org/TR/annotation-model/)
+| Media files (audiovisual content) | [IIIF Presentation API](https://iiif.io/api/presentation/3.0/)
+| Geographical data | [GeoJSON](https://geojson.org/) (RFC 7946)
+| Temporal data | [XML Schema Data Types] and [EDTF]
+| Addresses | schema.org [PostalAddress](https://schema.org/PostalAddress) and [vCard](https://www.rfc-editor.org/rfc/rfc6350.html#section-6.3.1)
+: Content types and standards reused in JSKOS {#tbl-standards}
 
-: Topics and standards {#tab-standards}
-
-Further: Data Catalog Vocabulary (DCAT)
-
-<!--
-A stable 1.0.0 release is planned within the next two years.
-
-- JSON-Serialization of SKOS
-- Extended by entities for mappings
-
-JSKOS is JSON-LD [@Kellogg2020]
-
-A common misconception of JSON-LD: it is not meant to create a JSON format but to 
-
-For this reasons it JSON Schema
-
--->
-<!-- Knowledge graphs: different graph data models (RDF and property graphs) -->
-
-<!--
-## Image: SKOS compared to RDF 
-
-- Lexical "Apple"
-- Apple as SKOS Concept (the fruit, not the company)
-- Apple as RDF resource (a class or instance, depending on use case)
-
-In SKOS there is no TBox and ABox, it's just concepts.
-
-Entities can have additional types but similar to labels in labeled property graphs, these types carry no 
--->
+[XML Schema Data Types]: https://www.w3.org/TR/xmlschema-2/
+[EDTF]: https://www.loc.gov/standards/datetime/
 
 ::: {#lst-example}
 ~~~json
-{ 
-  "prefLabel": { "en": "apple" }, 
-  "altLabel": { "en": [ ... ] }
-}
+{ "uri": "http://example.org/wreck-of-rms-titanic",
+  "prefLabel": { "en": "Wreck of the RMS Titanic" },
+  "scopeNote": { "en": [ "shipwreck of the Titanic, sunken in 1912" ] },
+  "identifier": [ "http://www.wikidata.org/entity/Q3018259" ],
+  "type": [ "http://www.w3.org/2004/02/skos/core#Concept", 
+            "http://www.cidoc-crm.org/cidoc-crm/E18_Physical_Thing" ],
+  "broader": [ { "uri": "http://example.org/rms-titanic" },
+               { "uri": "http://example.org/shipwrecks" } ],
+  "previous": [ { "uri": "http://example.org/voyage-of-rms-titanic" } ],
+  "subjectOf": [
+    { "url": "https://en.wikipedia.org/wiki/Wreck_of_the_Titanic" } ],
+  "location":
+    { "type": "Point", "coordinates": [-49.946944,41.7325,-3803] },
+  "place": [ { "uri": "http://example.org/atlantic-ocean" } ],
+  "qualifiedDates": {
+    "http://www.wikidata.org/entity/P575": [ {
+      "date": "1985-09-01", "source": [ null ] } ] },
+  "mappings": [ {
+    "type": [ "http://www.w3.org/2004/02/skos/core#exactMatch" ],
+    "from": { "memberSet": [
+      { "uri": "http://example.org/wreck-of-rms-titanic" } ] },
+    "to": { "memberList": [
+      { "uri": "https://d-nb.info/gnd/4121777-9",
+        "prefLabel": { "en": "Titanic" } },
+      { "uri": "https://d-nb.info/gnd/4066981-6",
+        "prefLabel": { "en": "shipwreck" } } ] } } ] }
 ~~~
 
-Example of a JSKOS record
+Example of a JSKOS concept record
 :::
 
-# Related work
+# The role of JSKOS for knowledge graphs
 
-JSKOS has been designed after a review of existing software for knowledge organization systems an the data formats used therein.and APIs
+JSKOS can be used to express full knowledge graphs; however, its main use case is the integration of data from different graphs, especially if they do not share a common metamodel such as RDF. The most common type of integration can be best understood by extending the Tbox/ABox dichotomy from description logic with a third part: the CBox (for concepts or categories) contains knowledge about entities whose details are out of the scope of the knowledge graph modeled with TBox and ABox. For example, the TBox of a genalogy database contains classes such as people and family relationships, and its ABox contains statements about individual people. This may include information about place of birth and death, but details of places and their relations are better kept in an independent Gazeteer, acting as CBox of the first graph.^[The idea of a CBox was developed independenly by Miroslav Líška and Marek Šurek for the Slovak knowledge graph portal <https://znalosti.gov.sk/> and by us for NFDI4Objects knowledge graph <https://graph.nfdi4objects.net/>.] JSKOS, although being a full knowledge graph representation format, is best used to reference and display concepts from diverse KOS by other knowledge graphs and in web applications.
 
-Wikibase data model
 
+<!--
 First of all JSKOS is based on SKOS and JSKOS-LD although. 
-
-JSON-LD was not introduced into JSKOS before ... and it is still not mandatory part of the specification.
-
-- Return format of APIs for terminology registries (Skosmos etc.)
-
 JSKOS is has been influenced by SKOS, JSON-LD 
-
 Moreover there is X-SKOS, SSSOM and formats for property graphs such as PG Format.
-
-TODO: image with
-
-- Property Graphs
-- RDF
-- RDF-star
-- Wikibase
-- JSKOS
-
-## JSKOS and RDF + Role of JSKOS for knowledge graphs
+JSON-LD was not introduced into JSKOS before ... and it is still not mandatory part of the specification.
+JSKOS is JSON-LD [@Kellogg2020]
+A common misconception of JSON-LD: it is not meant to create a JSON format but to 
 
 As a matter of fact, data in most end-use applications is not processed in form of RDF statements but in data structures of a programming language. JSON is close to the type system of JavaScript and other scripting languages, so ...
+-->
 
-no or only light mapping to the type system 
-
-(spreadsheets as notable execption)
-
-SKOS abstracts from features of different kinds of KOS to a simplified form (e.g. types of hierarchical relations such as part-of, subclass-of... are simplified into one hierarchical property). JSKOS adds some more specific properties often found in different kinds of KOS but the 
-
+<!--
 The fields have less specific semantic than properties from specialized ontologies, but they have pragmatic value and they support integration of KOS in different forms from different sources.
-
 
 NFDI4Objects KG
 
 - N4O KG: terminologies in addition to ABox and TBox
-
-A knowledge base can be conceptually represented as a combination of terminologies (TBox) and assertions (ABox).
-identifiers (Ibox)
-
-KOS are *referenced by other knowledge graphs*
+-->
 
 <!-- **Acknowledgments** This work is supported by ... -->

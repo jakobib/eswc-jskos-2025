@@ -1,0 +1,26 @@
+{ "uri": "http://example.org/wreck-of-rms-titanic",
+  "prefLabel": { "en": "Wreck of the RMS Titanic" },
+  "scopeNote": { "en": [ "shipwreck of the Titanic, sunken in 1912" ] },
+  "identifier": [ "http://www.wikidata.org/entity/Q3018259" ],
+  "type": [ "http://www.w3.org/2004/02/skos/core#Concept", 
+            "http://www.cidoc-crm.org/cidoc-crm/E18_Physical_Thing" ],
+  "broader": [ { "uri": "http://example.org/rms-titanic" },
+               { "uri": "http://example.org/shipwrecks" } ],
+  "previous": [ { "uri": "http://example.org/voyage-of-rms-titanic" } ],
+  "subjectOf": [
+    { "url": "https://en.wikipedia.org/wiki/Wreck_of_the_Titanic" } ],
+  "location": { "type": "Point", "coordinates": [-49.946944,41.7325,-3803] },
+  "place": [ { "uri": "http://example.org/atlantic-ocean" } ],
+  "qualifiedDates": {
+    "http://www.wikidata.org/entity/P575": [ {
+      "date": "1985-09-01", "source": [ null ] } ] },
+  "mappings": [ {
+    "type": [ "http://www.w3.org/2004/02/skos/core#exactMatch" ],
+    "from": { "memberSet": [
+      { "uri": "http://example.org/wreck-of-rms-titanic" } ] },
+    "to": { "memberList": [
+      { "uri": "https://d-nb.info/gnd/4121777-9",
+        "prefLabel": { "en": "Titanic" } },
+      { "uri": "https://d-nb.info/gnd/4066981-6",
+        "prefLabel": { "en": "shipwreck" } } ] } } ] }
+
